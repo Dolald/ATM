@@ -14,7 +14,7 @@ type ATM struct {
 
 func (c *ATM) ChangeLanguage() {
 	if !c.whatIsLanguage {
-		fmt.Println("\n1 - поменять на русский\n2 - поменять на английский\n")
+		fmt.Println("\n1 - sпоменять на русский\n2 - поменять на английский\n")
 	} else {
 		fmt.Println("\n1 - change the language to Russian\n2 - change the language to English\n")
 	}
