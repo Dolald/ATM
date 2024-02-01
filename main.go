@@ -39,7 +39,7 @@ func (a *ATM) ChangeLanguage(enterNumberOfLanguage int) {
 }
 
 func (c *Clients) CheckBalance() {
-	fmt.Println("Ваш баланс:", c.balance)
+	fmt.Println("Ваш балансs:", c.balance)
 }
 
 func (a *ATM) Deposit(deposit int) {
