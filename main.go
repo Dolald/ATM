@@ -17,15 +17,16 @@ var (
 type Clients struct {
 	amountOfWithdrawnMoney int
 	balance                int
-	CardNumber             string
+	CardNumber             int
 	Name                   string
 	PinCode                int
 }
 
 type ATM struct {
+	clientID        int
 	balance         int
 	banknoteToCount map[int]int
-	Clients         []Clients
+	Clients         map[int]Clients
 	language        language
 }
 
@@ -38,31 +39,25 @@ func (a *ATM) ChangeLanguage(enterNumberOfLanguage int) {
 	}
 }
 
-func (c *Clients) CheckBalance() {
-	fmt.Println("Ваш балансs:", c.balance)
+func (a *ATM) CheckBalance() {
+	for _, v := range a.Clients {
+		if _, ok := a.Clients[a.clientID]; ok {
+			fmt.Println("Ваш балансs:", v.balance)
+			break
+		}
+	}
 }
 
 func (a *ATM) Deposit(deposit int) {
 	a.balance += deposit
-	a.balanceOfСlient += deposit
-	fmt.Println("Идёт распознавание купюр")
-	fmt.Println("Вы успешно пополнили:", deposit)
-}
 
-func (a *ATM) creatNewClient() {
-	var pin int
-	var cardNumber, name string
-	fmt.Println("Введите номер карты, имя и пинкод")
-	fmt.Scan(&cardNumber, &pin, &name)
+	// for i := range a.Clients {
+	// 	if _, ok := a.Clients[a.clientID]; ok {
+	// 		a.Clients[i].balance += deposit
+	// 	}
+	// }
 
-	Newclient := Clients{
-		balance:    0,
-		CardNumber: cardNumber,
-		Name:       name,
-		PinCode:    pin,
-	}
-
-	a.Clients = append(a.Clients, Newclient)
+	fmt.Println("Идёт распознавание купюр\nВы успешно пополнили:", deposit)
 }
 
 func (a *ATM) Withdraw() {
@@ -83,9 +78,13 @@ func (a *ATM) Withdraw() {
 
 		fmt.Println("Введите пинкод")
 		fmt.Scan(&pinCode)
-		if pinCode != a.Clients.PinCode[a.Clients.CardNumber] {
-			fmt.Println("Не правильный пинкод")
-			return
+		for _, v := range a.Clients {
+			if _, ok := a.Clients[a.clientID]; ok {
+				if pinCode != v.PinCode {
+					fmt.Println("Не правильный пинкод")
+					return
+				}
+			}
 		}
 
 		if сhoosingBanknote != 1 { //если выбор банкноты один из 5
@@ -99,16 +98,20 @@ func (a *ATM) Withdraw() {
 
 		withdrawn = withdraw
 
-		switch {
-		case withdraw%100 != 0 || withdraw > a.balance:
-			fmt.Println("Банкомата не выдаёт такие суммы, выберите другую сумму")
-			return
-		case withdraw > B.balanceOfClient:
-			fmt.Println("У вас недостаточно денег для снятия такой суммы")
-			return
-		case withdraw+amountOfWithdrawnMoneyAmountOfClient[correctPin] > 300000:
-			fmt.Println("Максимальная сумма снятия с карты в день - 300 000")
-			return
+		for _, v := range a.Clients {
+			if _, ok := a.Clients[a.clientID]; ok {
+				switch {
+				case withdraw%100 != 0 || withdraw > a.balance:
+					fmt.Println("Банкомата не выдаёт такие суммы, выберите другую сумму")
+					return
+				case withdraw > v.balance:
+					fmt.Println("У вас недостаточно денег для снятия такой суммы")
+					return
+				case withdraw+v.amountOfWithdrawnMoney > 300000:
+					fmt.Println("Максимальная сумма снятия с карты в день - 300 000")
+					return
+				}
+			}
 		}
 
 		if _, ex := a.banknoteToCount[100]; !ex { // if нет 100, идёт проверка вводимого числа на кратность 100, но не 500 или вывод < 500
@@ -173,10 +176,13 @@ func (a *ATM) Withdraw() {
 
 		a.balance -= withdrawn
 		fmt.Println("Выдача купюр. . .\nВы успешно сняли", withdrawn)
-		amountOfWithdrawnMoneyOfClient[1973] += withdrawn //amountOfWithdrawnMoneyOfClient += withdrawn
-
-		fmt.Println(a.banknoteToCount)
+		for _, v := range a.Clients {
+			if _, ok := a.Clients[a.clientID]; ok {
+				v.amountOfWithdrawnMoney += withdrawn
+			}
+		}
 	}
+	fmt.Println(a.banknoteToCount)
 }
 
 func (a *ATM) checkBanknotesAmount() bool {
@@ -241,7 +247,6 @@ func (a *ATM) actionsOfATM() {
 
 	case 5:
 		fmt.Println("Заберите карту")
-		a.checkTheSecondEnteringPincode()
 		a.theFirstEntering()
 	}
 }
@@ -251,23 +256,25 @@ func (a *ATM) checkTheFirstEnteringPincode() {
 
 }
 
-func (a *ATM) checkTheSecondEnteringPincode() {
-
-}
-
 func (a *ATM) theFirstEntering() {
 	fmt.Println(a.balance)
 
-	fmt.Println(a.balanceOfСlient)
-
 	fmt.Println("Вставьте карту или приложите к NFC чипу \n1 - вставить карту или приложите к NFC чипу \n2 - поменять язык \n3 - выйти")
 	var displayNum int
+	var cardNum int
 
 	fmt.Scan(&displayNum)
 	switch displayNum {
 
 	case 1:
+		fmt.Println("Введите номер карты")
+		fmt.Scan(&cardNum)
 		fmt.Println("Идёт считывание карты")
+
+		if !a.checkClientForExistance(cardNum) {
+			a.createNewClient(cardNum)
+		}
+
 		a.checkTheFirstEnteringPincode()
 		fmt.Println("Добро пожаловать ʕ ᵔᴥᵔ ʔ Сладенький (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧✧✧✧✧✧✧✧✧✧✧✧✧✧✧✧✧✧✧✧✧✧")
 		a.actionsOfATM()
@@ -282,6 +289,34 @@ func (a *ATM) theFirstEntering() {
 	case 3:
 		fmt.Println("До свидания")
 	}
+}
+
+func (a *ATM) createNewClient(cardNum int) {
+	var pin int
+	var name string
+	fmt.Println("Введите Имя и пинкод")
+	fmt.Scan(&name, &pin)
+
+	NewClient := Clients{
+		amountOfWithdrawnMoney: 0,
+		balance:                0,
+		CardNumber:             cardNum,
+		Name:                   name,
+		PinCode:                pin,
+	}
+
+	a.Clients[a.clientID] = NewClient
+}
+
+func (a *ATM) checkClientForExistance(cardNum int) bool {
+	for _, v := range a.Clients {
+		if _, ok := a.Clients[a.clientID]; ok {
+			if v.CardNumber == cardNum {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func getBack() { // функциональность кнопки назад
@@ -299,7 +334,7 @@ func initializeATM() ATM {
 	atm := ATM{
 		language:        languageRussian,
 		banknoteToCount: make(map[int]int),
-		Clients:         []Clients{},
+		Clients:         make(map[int]Clients),
 	}
 
 	atm.banknoteToCount[100] = 50
